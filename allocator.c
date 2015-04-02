@@ -14,9 +14,9 @@ static int init_allocator()
 {
  fd = open("/dev/zero". 0_RDWR);
 
-for(i = 0; i< 9; i++)
+for(i = 0; i< 255; i++)
    {
-    void *startaddr[i] = NULL;
+    page_t *startaddr[i] = NULL;
 
    }
 }
@@ -80,7 +80,15 @@ else if (size >= 1024)
 if(startaddr[i] == NULL)
 {
 
-void * start  = mmap ( NULL , PAGESIZE , PROT_READ | PROT_WRITE , MAP_PRIVATE , fd , 0);
+page_t * new = create_new_page(NULL, );
+if ( size < 1024)
+   {
+     for(i= 0; i<(PAGESIZE-16); i++)
+	{
+    	 
+	}
+   }
+
 
 
 }
@@ -94,9 +102,39 @@ else{
 
 
 
+}
 
-
+void* my_calloc (size_t num, size_t size)
+{
 
 }
 
+
+
+void free (void* ptr) {
+
+}
+
+
+void* realloc (void* ptr, size_t size) {
+
+}
+
+
+page_t *create_new_page(page_t *prev, size_t size) {
+
+int fd = -1;
+
+struct page_small_header *ptr = mmap(NULL,PAGESIZE, PROT_READ|PROT_WRITE,
+MAP_PRIVATE,fd,0);
+
+ptr->prev = prev;
+ptr->next = prev;
+ptr->blocksize = blocksize;
+ptr->num_blocks = 0; 
+
+
+return pageptr;
+
+}
 
