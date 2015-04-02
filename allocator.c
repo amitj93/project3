@@ -85,6 +85,12 @@ void * start  = mmap ( NULL , PAGESIZE , PROT_READ | PROT_WRITE , MAP_PRIVATE , 
 
 }
 
+else{
+     mmap(NULL, PAGESIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+
+ 
+}
+
 
 
 
