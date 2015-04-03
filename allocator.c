@@ -18,17 +18,18 @@
 
 struct PageArrayEntry {
 	struct PageSmallHeader* page;
-	unsigned int object_type;
+	unsigned int segment_type;
 	}
 
 
 
 struct PageSmallHeader {
+	unsigned int segment_type;
 	struct PageSmallHeader* prev;
 	struct PageSmallHeader* next;
 	//Segment* freesegment;
-	unsigned int object_count;
-	unsigned int object_max;
+	unsigned int segment_count;
+	unsigned int segment_max;
 	};
 
 struct PageLargeHeader {
@@ -49,12 +50,6 @@ void __attribute__ ((destructor)) cleanup(void);
 static int init_allocator() {
  fd = open("/dev/zero". 0_RDWR);
 
-for(i = 0; i< 255; i++)
-   {
-    page_t *startaddr[i] = NULL;
-    void *startaddr[i] = NULL;
-   }	}
-
 */
 
 
@@ -63,17 +58,30 @@ for(i = 0; i< 255; i++)
 
 void *malloc(size_t *size)
 {
-int segment_selection_size;
+int segment_type;
+struct PageSmallHeader* page_small;
+struct PageSmallHeader* page_small_start;
+
 
 PageArrayEntry page_array[PAGEARRAYCOUNT];
 
 
-segment_selection_size = check_size(size);
-if (segment_selection_size != 0) {
-	page_small = page_array[segment_selection_size];
+segment_type = check_size(size);
 
-
-
+if (segment_type != 4096) {
+	//segment_id = base2log(segment_type);
+	page_small = page_array[segment_type];
+	page_small_start = page_small;
+	while (page_small is full) {
+		page_small = page_small->next;
+		if (page_small == page_small_start) {
+			page_small = get_page_small();
+			page_small->segment_type = segment_type;
+			page_small_start->next = page_small;
+			break;
+			}
+		}
+	pointer = page_small_malloc(page_small);
 
 	}
 
@@ -87,27 +95,86 @@ if (segment_selection_size != 0) {
 
 
 
+page_small_malloc(struct PageSmallHeader* page)
+{
 
-if(startaddr[i] == NULL) {
 
-page_t * new = create_new_page(NULL, );
-if ( size < 1024)
-   {
-     for(i= 0; i<(PAGESIZE-16); i++)
+
+}
+
+
+
+
+
+
+
+void get_page()
+{
+
+void* page = mmap( 	NULL,
+					PAGESIZE,
+					PROT_READ | PROT_WRITE,
+					MAP_PRIVATE,
+					fd,
+					0);
+
+return page;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+void free(void* pointer)
+{
+
+struct PageSmallHeader* page_small;
+#define PAGEMASK (unsigned long) ~0xFFF
+
+if (pointer == NULL)
 	{
-    	 
-	}
-   }
-
-
-
+	return;
 	}
 
-else{
-     mmap(NULL, PAGESIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 
- 
+
+base = (void*)((unsigned long)pointer & PAGEMASK);
+
+if (*((int*) base) < 4096) {
+	page_small = (struct PageSmallHeader*) base;
+
+	page_small->segment_count--
+
+	if (page_small->segment_count == 0) {
+		//free page
+		}
+
 	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
