@@ -9,6 +9,7 @@
 
 
 
+#define PAGEMASK (unsigned long) ~0xFFF
 
 
 
@@ -27,11 +28,13 @@ struct PageSmallHeader {
 	unsigned int segment_type;
 	struct PageSmallHeader* prev;
 	struct PageSmallHeader* next;
-	//Segment* freesegment;
 	unsigned int segment_count;
 	unsigned int segment_max;
 	};
 
+
+
+/*
 struct PageLargeHeader {
 	struct PageLargeHeader* prev;
 	struct PageLargeHeader* next;
@@ -40,20 +43,23 @@ struct PageLargeHeader {
 	unsigned int size_total;
 	};
 
-
-
-
-/*
-void __attribute__ ((constructor)) init(void);
-void __attribute__ ((destructor)) cleanup(void);
-
-static int init_allocator() {
- fd = open("/dev/zero". 0_RDWR);
-
 */
 
+void __attribute__ ((constructor)) init_allocator(void);
+void __attribute__ ((destructor)) cleanup_allocator(void);
+
+FILE* fd;
+
+static int init_allocator()
+{
+fd = open("/dev/zero". 0_RDWR);
+}
 
 
+static int cleanup_allocator()
+{
+close(fd);
+}
 
 
 void *malloc(size_t *size)
@@ -68,21 +74,37 @@ PageArrayEntry page_array[PAGEARRAYCOUNT];
 
 segment_type = check_size(size);
 
-if (segment_type != 4096) {
-	//segment_id = base2log(segment_type);
-	page_small = page_array[segment_type];
-	page_small_start = page_small;
-	while (page_small is full) {
-		page_small = page_small->next;
-		if (page_small == page_small_start) {
-			page_small = get_page_small();
-			page_small->segment_type = segment_type;
-			page_small_start->next = page_small;
-			break;
+if (segment_type != 0) {
+	page_small = page_array[segment_type]->page;
+
+	if (page_small == NULL) {
+
+		page_small = get_page_small(segment_type);
+
+		page_small->next = page_small;
+		page_small->prev = page_small;
+		}
+	else {
+		page_small_start = page_small;
+
+		while (page_small->segment_count == page_small->segment_max) {
+
+			page_small = page_small->next;
+			if (page_small == page_small_start) {
+
+				page_small = get_page_small();
+
+				page_small->prev = page_small_start;
+				page_small->next = page_small_start->next;
+				page_small->next->prev = page_small;
+				page_small_start->next = page_small;
+
+				break;
+				}
 			}
 		}
-	pointer = page_small_malloc(page_small);
 
+	pointer = page_small_malloc_segment(page_small);
 	}
 
 
@@ -95,7 +117,7 @@ if (segment_type != 4096) {
 
 
 
-page_small_malloc(struct PageSmallHeader* page)
+page_small_malloc_segment(struct PageSmallHeader* page)
 {
 
 
@@ -108,15 +130,19 @@ page_small_malloc(struct PageSmallHeader* page)
 
 
 
-void get_page()
+void get_page_small(int type)
 {
 
 void* page = mmap( 	NULL,
 					PAGESIZE,
 					PROT_READ | PROT_WRITE,
 					MAP_PRIVATE,
-					fd,
+					fd, //-1
 					0);
+
+page->segment_type = segment_type;
+page->segment_count = 0;
+page->segment_max = //
 
 return page;
 }
@@ -137,7 +163,9 @@ void free(void* pointer)
 {
 
 struct PageSmallHeader* page_small;
-#define PAGEMASK (unsigned long) ~0xFFF
+struct PageArrayEntry* page_array_entry;
+
+
 
 if (pointer == NULL)
 	{
@@ -148,24 +176,53 @@ if (pointer == NULL)
 
 base = (void*)((unsigned long)pointer & PAGEMASK);
 
-if (*((int*) base) < 4096) {
+if (*((int*) base) != 0) {
 	page_small = (struct PageSmallHeader*) base;
 
 	page_small->segment_count--
 
 	if (page_small->segment_count == 0) {
-		//free page
+		page_array_entry = &page_array[page_small->segment_type];
+
+		if (page_small = page_small->next) {
+			page_array_entry->page = NULL;
+			}
+		else {
+			page_small->prev->next = page_small->next;
+			page_small->next->prev = page_small->prev;
+
+			if (page_array_entry->page == page_small) {
+				page_array_entry->page = page_small->next;
+				}
+			}
+
+		page_destruct(page_small);
 		}
 
+	page_small_free_segment(void* page, struct PageSmallHeader* page_small);
 	}
 
 }
 
 
 
+void page_destruct(void* page)
+{
+munmap( page, PAGESIZE);
+return;
+}
 
 
 
+
+
+page_small_free_segment(void* page, struct PageSmallHeader* page_small)
+{
+
+
+
+
+}
 
 
 
